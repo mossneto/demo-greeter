@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: greeter
+
+contact:
+  name: mossneto
+  email: mossneto@gmail.com
