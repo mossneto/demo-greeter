@@ -1,7 +1,7 @@
 pipeline {
     agent any
 
-    toos {
+    tools {
         maven 'maven3'
         jdk 'jdk8'
     }
