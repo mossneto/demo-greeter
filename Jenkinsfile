@@ -7,16 +7,15 @@ pipeline {
     }
 
     stages {
-        stage('Checkout SCM') {
+        stage('Build') {
             steps {
-                checkout scm
+                sh 'mvn clean compile'
             }
         }
 
-        stage('Build') {
+        stage('Unit Test') {
             steps {
-                echo 'Building..'
-                sh 'mvn clean verify package'
+                sh 'mvn verify'
             }
         }
     }
