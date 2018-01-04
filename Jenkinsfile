@@ -1,7 +1,7 @@
+pom = readMavenPom file: 'pom.xml'
+
 pipeline {
     agent any
-
-    pom = readMavenPom file: 'pom.xml'
 
     tools {
         maven 'maven3'
