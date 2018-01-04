@@ -14,7 +14,7 @@ pipeline {
                     def pom = readMavenPom file: 'pom.xml'
                     VERSION = pom.version
                 }
-                sh "echo ${VERSION}'
+                sh "echo ${VERSION}"
             }
         }
 
