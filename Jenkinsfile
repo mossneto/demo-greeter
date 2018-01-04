@@ -19,16 +19,24 @@ pipeline {
             }
         }
 
-        stage('S3 Publish') {
+        stage('Test') {
             steps {
-                sh 'mvn deploy'
+                pom = readMavenPom("pom.xml")
+                sh 'echo ${pom.version}'
             }
         }
 
-        stage('Dev Deploy') {
+        stage('QA Deploy') {
             when { branch "develop" }
             steps {
-                sh 'echo ...'
+                sh 'cd terraform/develop & terraform apply -var-file=~/qa.tfvars -var greeter_version=${env.} & cd ../..'
+            }
+        }
+
+        stage('Staging Deploy') {
+            when { branch "master" }
+            steps {
+                sh 'cd terraform/staging & terraform apply -var-file=~/staging.tfvars -var greeter_version=${env.} & cd ../..'
             }
         }
     }
