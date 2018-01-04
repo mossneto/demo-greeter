@@ -14,7 +14,7 @@ pipeline {
                     def pom = readMavenPom file: 'pom.xml'
                     VERSION = pom.version
                 }
-                sh 'echo ${VERSION}'
+                sh "echo ${VERSION}'
             }
         }
 
@@ -24,23 +24,17 @@ pipeline {
             }
         }
 
-        stage('Test') {
-            steps {
-                sh 'echo ${VERSION}'
-            }
-        }
-
         stage('QA Deploy') {
             when { branch "develop" }
             steps {
-                sh 'cd terraform/develop & terraform apply -var-file=~/qa.tfvars -var greeter_version=${env.} & cd ../..'
+                sh "cd terraform/develop & terraform apply -var-file=~/qa.tfvars -var greeter_version=${VERSION} & cd ../.."
             }
         }
 
         stage('Staging Deploy') {
             when { branch "master" }
             steps {
-                sh 'cd terraform/staging & terraform apply -var-file=~/staging.tfvars -var greeter_version=${env.} & cd ../..'
+                sh "cd terraform/staging & terraform apply -var-file=~/staging.tfvars -var greeter_version=${VERSION} & cd ../.."
             }
         }
     }
