@@ -1,6 +1,8 @@
 pipeline {
     agent any
 
+    pom = readMavenPom file: 'pom.xml'
+
     tools {
         maven 'maven3'
         jdk 'jdk8'
@@ -21,7 +23,6 @@ pipeline {
 
         stage('Test') {
             steps {
-                pom = readMavenPom("pom.xml")
                 sh 'echo ${pom.version}'
             }
         }
