@@ -22,23 +22,47 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>1.8</java.version>
+
+		<spring.swagger.version>2.7.0</spring.swagger.version>
+
+        <s3.wagon.version>1.2.1</s3.wagon.version>
 	</properties>
 
 	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+
+		<!-- Tools -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+
+		<!-- Swagger -->
+		<dependency>
+			<groupId>io.springfox</groupId>
+			<artifactId>springfox-swagger2</artifactId>
+			<version>${spring.swagger.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.springfox</groupId>
+			<artifactId>springfox-swagger-ui</artifactId>
+			<version>${spring.swagger.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.springfox</groupId>
+			<artifactId>springfox-bean-validators</artifactId>
+			<version>${spring.swagger.version}</version>
+		</dependency>
+
+		<!-- Test -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
@@ -53,7 +77,32 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
 		</plugins>
+
+        <!-- Temporary use this extension to store artifacts on S3 for easy download on EC2 -->
+        <extensions>
+            <extension>
+                <groupId>org.kuali.maven.wagons</groupId>
+                <artifactId>maven-s3-wagon</artifactId>
+                <version>${s3.wagon.version}</version>
+            </extension>
+        </extensions>
 	</build>
 
+	<distributionManagement>
+		<snapshotRepository>
+			<id>repo.mossneto.com</id>
+			<url>s3://repo.mossneto.com/snapshot</url>
+		</snapshotRepository>
+		<repository>
+			<id>repo.mossneto.com</id>
+			<url>s3://repo.mossneto.com/release</url>
+		</repository>
+	</distributionManagement>
 
+	<repositories>
+		<repository>
+			<id>repo.mossneto.com</id>
+			<url>s3://repo.mossneto.com/release</url>
+		</repository>
+	</repositories>
 </project>
