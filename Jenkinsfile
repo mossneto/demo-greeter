@@ -18,5 +18,12 @@ pipeline {
                 sh 'mvn verify'
             }
         }
+
+        stage('Dev Deploy') {
+            when { branch "develop" }
+            steps {
+                sh 'echo ...'
+            }
+        }
     }
 }
