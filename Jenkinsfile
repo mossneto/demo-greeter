@@ -14,13 +14,18 @@ pipeline {
                     def pom = readMavenPom file: 'pom.xml'
                     VERSION = pom.version
                 }
-                sh "echo ${VERSION}"
             }
         }
 
         stage('Unit Test') {
             steps {
                 sh 'mvn verify'
+            }
+        }
+
+        stage('Push Jar' {
+            steps {
+                sh 'mvn deploy'
             }
         }
 

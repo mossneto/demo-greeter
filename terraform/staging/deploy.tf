@@ -42,7 +42,7 @@ resource "aws_key_pair" "jenkins" {
   public_key    = "${var.aws_public_key}"
 }
 
-resource "aws_instance" "greeter" {
+resource "aws_launch_configuration" "greeter-lc" {
   connection {
     type           = "ssh"
     user           = "ubuntu"
@@ -51,23 +51,86 @@ resource "aws_instance" "greeter" {
     timeout        = "2m"
   }
 
-  ami                       = "${var.aws_ami}"
-  instance_type             = "t2.micro"
-  key_name                  = "jenkins"
-  vpc_security_group_ids    = [ "${aws_security_group.greeter.id}" ]
+  name_prefix                      = "greeter-lc-"
+  image_id                         = "${var.aws_ami}"
+  instance_type                    = "${var.aws_instance_type}"
 
-  provisioner "file" {
-    source      = "hello.txt"
-    destination = "~/hello.txt"
+  key_name                         = "jenkins"
+
+  vpc_classic_link_security_groups = [ "${aws_security_group.greeter.id}" ]
+
+  lifecycle {
+    create_before_destroy = true
   }
 
   provisioner "remote-exec" {
     inline = [
-      "mvn dependency:get -DremoteRepositories=${var.greeter_repo_id}::::${var.greeter_repo_url} -DgroupId=com.mossneto -DartifactId=greeter -Dversion=${var.greeter_version} -Dtransitive=false -Ddest=."
+      "mvn dependency:get -DremoteRepositories=${var.greeter_repo_id}::::${var.greeter_repo_url} -DgroupId=com.mossneto -DartifactId=greeter -Dversion=${var.greeter_version} -Dtransitive=false -Ddest=.",
+      "java -jar com.mossneto.greeter-${var.greeter_version}.jar"
     ]
   }
 }
 
-resource "aws_eip" "ip" {
-  instance = "${aws_instance.greeter.id}"
+resource "aws_autoscaling_group" "greeters" {
+  availability_zones        = [ "us-east-1a" ]
+  name                      = "greeters-asg"
+  max_size                  = "5"
+  min_size                  = "1"
+  health_check_grace_period = 300
+  health_check_type         = "EC2"
+  desired_capacity          = 2
+  force_delete              = true
+  launch_configuration      = "${aws_launch_configuration.greeter-lc.name}"
+
+  tag {
+    key                     = "Name"
+    value                   = "Agent Instance"
+    propagate_at_launch     = true
+  }
+}
+
+resource "aws_autoscaling_policy" "greeters-scale-up" {
+  name                      = "greeters-scale-up"
+  scaling_adjustment        = 1
+  adjustment_type           = "ChangeInCapacity"
+  cooldown                  = 120
+  autoscaling_group_name    = "${aws_autoscaling_group.greeters.name}"
+}
+
+resource "aws_autoscaling_policy" "greeters-scale-down" {
+  name                      = "greeters-scale-down"
+  scaling_adjustment        = -1
+  adjustment_type           = "ChangeInCapacity"
+  cooldown                  = 300
+  autoscaling_group_name    = "${aws_autoscaling_group.greeters.name}"
+}
+
+resource "aws_cloudwatch_metric_alarm" "cpu-high" {
+  alarm_name                = "cpu-high"
+  comparison_operator       = "GreaterThanOrEqualToThreshold"
+  evaluation_periods        = "2"
+  metric_name               = "CPUUtilization"
+  namespace                 = "AWS/EC2"
+  period                    = "180"
+  statistic                 = "Average"
+  threshold                 = "70"
+  alarm_actions             = [ "${aws_autoscaling_policy.greeters-scale-up.arn}" ]
+  dimensions {
+    AutoScalingGroupName    = "${aws_autoscaling_group.greeters.name}"
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "cpu-low" {
+  alarm_name                = "cpu-high"
+  comparison_operator       = "LessThanOrEqualToThreshold"
+  evaluation_periods        = "2"
+  metric_name               = "CPUUtilization"
+  namespace                 = "AWS/EC2"
+  period                    = "120"
+  statistic                 = "Average"
+  threshold                 = "50"
+  alarm_actions             = [ "${aws_autoscaling_policy.greeters-scale-down.arn}" ]
+  dimensions {
+    AutoScalingGroupName    = "${aws_autoscaling_group.greeters.name}"
+  }
 }

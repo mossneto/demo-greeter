@@ -56,14 +56,10 @@ resource "aws_instance" "greeter" {
   key_name                  = "jenkins"
   vpc_security_group_ids    = [ "${aws_security_group.greeter.id}" ]
 
-  provisioner "file" {
-    source      = "hello.txt"
-    destination = "~/hello.txt"
-  }
-
   provisioner "remote-exec" {
     inline = [
-      "mvn dependency:get -DremoteRepositories=${var.greeter_repo_id}::::${var.greeter_repo_url} -DgroupId=com.mossneto -DartifactId=greeter -Dversion=${var.greeter_version} -Dtransitive=false -Ddest=."
+      "mvn dependency:get -DremoteRepositories=${var.greeter_repo_id}::::${var.greeter_repo_url} -DgroupId=com.mossneto -DartifactId=greeter -Dversion=${var.greeter_version} -Dtransitive=false -Ddest=.",
+      "java -jar com.mossneto.greeter-${var.greeter_version}.jar"
     ]
   }
 }

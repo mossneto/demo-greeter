@@ -2,6 +2,5 @@ spring:
   application:
     name: greeter
 
-contact:
-  name: mossneto
-  email: mossneto@gmail.com
+server:
+  port: 8080
