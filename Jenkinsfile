@@ -19,6 +19,12 @@ pipeline {
             }
         }
 
+        stage('S3 Publish') {
+            steps {
+                sh 'mvn deploy'
+            }
+        }
+
         stage('Dev Deploy') {
             when { branch "develop" }
             steps {
