@@ -1,18 +1,3 @@
-variable "greeter_version" {}
-variable "greeter_repo_id" {}
-variable "greeter_repo_url" {}
-
-variable "aws_region" {}
-variable "aws_ami" {}
-variable "aws_instance_type" {}
-
-variable "aws_key_pair_name" {}
-variable "aws_access_key" {}
-variable "aws_secret_key" {}
-
-variable "aws_private_key" {}
-variable "aws_public_key" {}
-
 provider "aws" {
   access_key = "${var.aws_access_key}"
   secret_key = "${var.aws_secret_key}"
@@ -60,7 +45,7 @@ resource "aws_elb" "greeter-lb" {
   }
 }
 
-resource "aws_key_pair" "jenkins" {
+resource "aws_key_pair" "greeter" {
   key_name      = "${var.aws_key_pair_name}"
   public_key    = "${var.aws_public_key}"
 }
@@ -78,7 +63,7 @@ resource "aws_launch_configuration" "greeter-lc" {
   image_id                         = "${var.aws_ami}"
   instance_type                    = "${var.aws_instance_type}"
 
-  key_name                         = "jenkins"
+  key_name                         = "${var.aws_key_pair_name}"
 
   security_groups  = [ "${aws_security_group.greeter.id}" ]
 
