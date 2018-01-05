@@ -22,8 +22,9 @@ Build Steps
 
 For production and any custom environment, the application can be deployed by running terraform
 
-cd <folder-contain-terraform-files>
-terraform apply -var-file=<variable-file> -var greeter_version=<greeter-version>
+cd `folder-contain-terraform-files`
+
+terraform apply -var-file=`variable-file` -var greeter_version=`greeter-version`
 
 The following variable need to be configure in <variable-file>
 - greeter_repo_id: This is the id of s3.wagon's repo configured in <server> section of settings.xmml
