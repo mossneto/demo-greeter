@@ -1,5 +1,5 @@
 The idea of this project is to have everything as codes, including CI/CD. To achieve this, the following things are used
-1. Jenkins Declarative Pipeline to declare build pipeline as codes.
+1. Jenkins Declarative Pipeline to declare build pipeline as codes. All the pipline are declared in the file `Jenkinsfile`
 2. Terraform to provision VMs required for deployment (scripts are in these folder terraform/develop, and terraform/staging)
 3. Spring Boot to help with the usual things needed in micro services. For example, config-server, microservice's communication, service discovery.
 
@@ -31,7 +31,9 @@ The following variable need to be configure in <variable-file>
 
 - aws_region: Region of your AWS account
 - aws_ami: Custom ami Id that have java and maven installed
+- aws_instance_type: Type of instance. t2.micro is good enough
 
+- aws_key_pair_name: Name of the key-pair that will show up in AWS console
 - aws_access_key: AWS's access_key that will be used to create and provisioning EC2 instances
 - aws_secret_key: AWS's secret_key that will be used to create and provisioning EC2 instances
 
