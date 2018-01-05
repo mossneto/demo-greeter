@@ -1,10 +1,12 @@
-variable "greeter_version"
-variable "greeter_repo_id"
-variable "greeter_repo_url"
+variable "greeter_version" {}
+variable "greeter_repo_id" {}
+variable "greeter_repo_url" {}
 
 variable "aws_region" {}
 variable "aws_ami" {}
+variable "aws_instance_type" {}
 
+variable "aws_key_pair_name" {}
 variable "aws_access_key" {}
 variable "aws_secret_key" {}
 
@@ -37,8 +39,29 @@ resource "aws_security_group" "greeter" {
   }
 }
 
+resource "aws_elb" "greeter-lb" {
+  name            = "greeter-lb"
+  security_groups = [ "${aws_security_group.greeter.id}" ]
+  availability_zones = [ "us-east-1a", "us-east-1b" ]
+
+  listener {
+    instance_port = 8080
+    instance_protocol = "http"
+    lb_port = 80
+    lb_protocol = "http"
+  }
+
+  health_check {
+    healthy_threshold = 2
+    unhealthy_threshold = 2
+    timeout = 3
+    target = "HTTP:80/"
+    interval = 30
+  }
+}
+
 resource "aws_key_pair" "jenkins" {
-  key_name      = "jenkins"
+  key_name      = "${var.aws_key_pair_name}"
   public_key    = "${var.aws_public_key}"
 }
 
@@ -57,7 +80,7 @@ resource "aws_launch_configuration" "greeter-lc" {
 
   key_name                         = "jenkins"
 
-  vpc_classic_link_security_groups = [ "${aws_security_group.greeter.id}" ]
+  security_groups  = [ "${aws_security_group.greeter.id}" ]
 
   lifecycle {
     create_before_destroy = true
@@ -72,7 +95,7 @@ resource "aws_launch_configuration" "greeter-lc" {
 }
 
 resource "aws_autoscaling_group" "greeters" {
-  availability_zones        = [ "us-east-1a" ]
+  availability_zones        = [ "us-east-1a", "us-east-1b" ]
   name                      = "greeters-asg"
   max_size                  = "5"
   min_size                  = "1"
@@ -81,10 +104,11 @@ resource "aws_autoscaling_group" "greeters" {
   desired_capacity          = 2
   force_delete              = true
   launch_configuration      = "${aws_launch_configuration.greeter-lc.name}"
+  load_balancers            = [ "${aws_elb.greeter-lb.id}" ]
 
   tag {
     key                     = "Name"
-    value                   = "Agent Instance"
+    value                   = "Greeter Instances"
     propagate_at_launch     = true
   }
 }
@@ -121,7 +145,7 @@ resource "aws_cloudwatch_metric_alarm" "cpu-high" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "cpu-low" {
-  alarm_name                = "cpu-high"
+  alarm_name                = "cpu-low"
   comparison_operator       = "LessThanOrEqualToThreshold"
   evaluation_periods        = "2"
   metric_name               = "CPUUtilization"
