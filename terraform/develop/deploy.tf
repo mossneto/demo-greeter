@@ -1,16 +1,3 @@
-variable "greeter_version"
-variable "greeter_repo_id"
-variable "greeter_repo_url"
-
-variable "aws_region" {}
-variable "aws_ami" {}
-
-variable "aws_access_key" {}
-variable "aws_secret_key" {}
-
-variable "aws_private_key" {}
-variable "aws_public_key" {}
-
 provider "aws" {
   access_key = "${var.aws_access_key}"
   secret_key = "${var.aws_secret_key}"
@@ -37,8 +24,29 @@ resource "aws_security_group" "greeter" {
   }
 }
 
-resource "aws_key_pair" "jenkins" {
-  key_name      = "jenkins"
+resource "aws_elb" "greeter-lb" {
+    name            = "greeter-lb"
+    security_groups = [ "${aws_security_group.greeter.id}" ]
+    availability_zones = [ "us-east-1a", "us-east-1b" ]
+
+    listener {
+        instance_port = 8080
+        instance_protocol = "http"
+        lb_port = 80
+        lb_protocol = "http"
+    }
+
+    health_check {
+        healthy_threshold = 2
+        unhealthy_threshold = 2
+        timeout = 3
+        target = "HTTP:80/"
+        interval = 30
+    }
+}
+
+resource "aws_key_pair" "greeter" {
+  key_name      = "${var.aws_key_pair_name}"
   public_key    = "${var.aws_public_key}"
 }
 
@@ -52,8 +60,8 @@ resource "aws_instance" "greeter" {
   }
 
   ami                       = "${var.aws_ami}"
-  instance_type             = "t2.micro"
-  key_name                  = "jenkins"
+  instance_type             = "${var.aws_instance_type}"
+  key_name                  = "${var.aws_key_pair_name}"
   vpc_security_group_ids    = [ "${aws_security_group.greeter.id}" ]
 
   provisioner "remote-exec" {
@@ -62,8 +70,4 @@ resource "aws_instance" "greeter" {
       "java -jar com.mossneto.greeter-${var.greeter_version}.jar"
     ]
   }
-}
-
-resource "aws_eip" "ip" {
-  instance = "${aws_instance.greeter.id}"
 }
